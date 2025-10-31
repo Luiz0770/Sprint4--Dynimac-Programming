@@ -1,57 +1,79 @@
-# ⚙️ SmartStock PD - Otimização do Consumo de Insumos com Programação Dinâmica
+# ⚙️ SmartStock - Controle de Estoque de Insumos
 
-O **SmartStock PD** é uma extensão do projeto *SmartStock*, desenvolvida com foco em **modelagem matemática e otimização via Programação Dinâmica (PD)**.  
-O sistema busca aprimorar o **controle de consumo de insumos em unidades de diagnóstico**, garantindo **previsão eficiente de reposição**, **redução de desperdícios** e **melhor visibilidade do uso de reagentes e descartáveis**.
+O **SmartStock ** é um sistema de **controle de consumo de insumos** desenvolvido com o objetivo de **otimizar o consumo diário**, evitando **faltas e excessos**, garantindo **custo mínimo total** para insumos como reagentes e materiais descartáveis.
 
 ---
 
 ## ✅ Objetivo
 
-Modelar e resolver o problema do consumo diário de insumos utilizando **Programação Dinâmica**, com três abordagens distintas:
+Determinar a **política ótima de consumo diário** para um insumo, considerando:
 
-- 🧩 **Versão Recursiva**  
-- 💾 **Versão com Memorização (Top-Down)**  
+- Estoque inicial disponível  
+- Estoque ideal desejado  
+- Consumo diário médio  
+
+O sistema utiliza três abordagens:
+
+- 🧩 **Versão Recursiva (Top-Down)**  
+- 💾 **Versão Recursiva com Memoização (Top-Down com cache)**  
 - 📊 **Versão Iterativa (Bottom-Up)**  
 
-Todas as versões garantem **os mesmos resultados**, demonstrando a equivalência das abordagens e permitindo comparar **eficiência e desempenho**.
+Todas as versões retornam **o mesmo resultado**, garantindo **consistência do modelo**.
 
 ---
 
 ## 🧱 Estrutura do Problema
 
-Cada insumo é representado por sua **quantidade disponível**, **consumo médio diário** e **estoque ideal desejado**.  
-O objetivo é determinar o **consumo ótimo diário**, evitando falta ou excesso de produtos.
+Cada insumo é descrito por:
 
 ```python
-estoque = {
-    "Reagente A": {"estoque_atual": 50, "consumo_medio": 5, "estoque_ideal": 60},
-    "Reagente B": {"estoque_atual": 20, "consumo_medio": 4, "estoque_ideal": 25},
-    "Descartável C": {"estoque_atual": 15, "consumo_medio": 2, "estoque_ideal": 20}
+insumo = {
+    "nome": "Luvas descartaveis",
+    "estoque_inicial": 10,
+    "estoque_ideal": 10,
+    "consumo_diario": 3,
+    "dias_planejados": 7
 }
 ```
+
+O modelo avalia **quantos itens consumir por dia** para minimizar o custo de falta ou excesso.
 
 ---
 
 ## 📌 Formulação do Problema
 
 ### 🔹 Estados
-O **estado** é definido pelo **dia** e pela **quantidade restante** de cada insumo:  
-`estado = (dia, quantidade_restante)`
+O **estado** é definido pelo **dia atual** e pelo **estoque restante**:
+
+```
+estado = (dia, estoque_atual)
+```
 
 ### 🔹 Decisões
-A **decisão** consiste em **quanto consumir** de um insumo no dia.  
-`decisao = consumo_dia`
+A **decisão** consiste em **quanto consumir** do insumo no dia, escolhendo entre:
+
+```
+decisoes(consumo_ideal) = [consumo_ideal-1, consumo_ideal, consumo_ideal+1]
+```
+
+- Garante decisões realistas e não negativas.
+- Permite flexibilidade no consumo diário.
 
 ### 🔹 Função de Transição
-Após cada decisão, o sistema atualiza o estado:
+Atualiza o estado após cada decisão:
+
 ```
-quantidade_restante' = quantidade_restante - consumo_dia
+estoque_proximo = estoque_atual - consumo_dia
 ```
 
 ### 🔹 Função Objetivo
-Minimizar o **custo total** (diferença entre estoque real e ideal), evitando desperdícios e rupturas:
+Minimizar o **custo total acumulado**, definido como:
+
+- **Custo por falta**: quantidade negativa × 8  
+- **Custo por excesso**: quantidade acima do ideal × 2  
+
 ```
-Custo total = |estoque_final - estoque_ideal|
+Custo total = Σ custo_diario
 ```
 
 ---
@@ -60,119 +82,108 @@ Custo total = |estoque_final - estoque_ideal|
 
 | Conceito / Estrutura                 | Aplicação no Contexto do Problema                                                                 |
 |-------------------------------------|----------------------------------------------------------------------------------------------------|
-| **Programação Dinâmica**            | Modela o problema de decisão diária de consumo, otimizando o custo final                           |
-| **Versão Recursiva**                | Resolve o problema dividindo em subproblemas menores, explorando todas as combinações possíveis     |
-| **Versão com Memorização (Top-Down)**| Armazena resultados já calculados para evitar recomputações redundantes                             |
-| **Versão Iterativa (Bottom-Up)**    | Constrói a solução do zero até o resultado final utilizando tabela de resultados parciais           |
-| **Função de Custo Dinâmico**        | Calcula a diferença entre consumo real e estoque ideal, penalizando decisões ineficientes           |
-| **Comparação de Resultados**        | Garante que as três versões retornem o mesmo resultado ótimo                                        |
-| **Visualização via Print/Loop**     | Mostra o custo ótimo e os estados percorridos                                                      |
+| **Programação Dinâmica**            | Otimiza o consumo diário, considerando todas as combinações possíveis de decisões                   |
+| **Versão Recursiva (Top-Down)**     | Resolve o problema recursivamente, explorando todas as decisões possíveis                          |
+| **Versão Recursiva com Memoização** | Usa `lru_cache` para armazenar subproblemas já resolvidos, evitando recomputações                  |
+| **Versão Iterativa (Bottom-Up)**    | Constrói tabela `dp[dia][estoque]` do menor para o maior caso, garantindo maior eficiência         |
+| **Função de Custo Dinâmico**        | Penaliza faltas e excessos com valores fixos, calculando o custo diário total                      |
+| **Comparação de Resultados**        | Verifica consistência entre as três abordagens                                                   |
+| **Execução via Loop/Print**         | Permite simular a política ótima e visualizar o custo mínimo                                       |
 
 ---
 
 ## 🔁 Funcionamento das Versões
 
 ### 🧩 1. Versão Recursiva
-Implementa a lógica clássica de PD:
-- Define o problema de forma recursiva.
-- Chama a si mesma para subproblemas menores.
-- Possui maior custo computacional.
+- Define o problema de forma recursiva.  
+- Explora todas as combinações de decisões para cada dia.  
+- Retorna o **custo mínimo total**.
 
-📘 *Uso*: ideal para entender a estrutura conceitual do problema.
+📘 *Uso*: mais simples, porem menos eficiente.
 
 ---
 
-### 💾 2. Versão com Memorização (Top-Down)
-Aproveita a versão recursiva, mas adiciona um **cache (`memo`)**:
-- Armazena resultados já resolvidos.
-- Evita cálculos repetidos.
-- Reduz exponencialmente o tempo de execução.
+### 💾 2. Versão Recursiva com Memoização
+- Igual à versão recursiva, mas armazena subproblemas já resolvidos com `@lru_cache`.  
+- Evita recalcular estados repetidos, **reduzindo tempo de execução**.
 
-📘 *Uso*: melhora a eficiência mantendo a clareza da recursão.
+📘 *Uso*: mantém clareza recursiva, mas mais eficiente.
 
 ---
 
 ### 📊 3. Versão Iterativa (Bottom-Up)
-Usa **tabelas** para resolver o problema do menor caso ao maior:
-- Itera sobre dias e quantidades.
-- Constrói progressivamente o resultado final.
-- É a forma **mais eficiente** em tempo e memória.
+- Cria tabela `dp[dia][estoque]` com todos os custos possíveis.  
+- Preenche a tabela do **último dia para o primeiro**.  
+- Retorna o **menor custo total** para o estoque inicial.
 
-📘 *Uso*: ideal para grandes volumes de dados e aplicações reais.
+📘 *Uso*: mais eficiente em tempo e memória, ideal para volumes maiores.
 
 ---
 
 ## 🧠 Exemplo de Resultado
 
-Ao simular o consumo diário de insumos, o sistema calcula o **custo mínimo total** e **determina a política ótima de consumo**:
+Simulação de consumo diário:
 
-```
-=== Consumo ótimo ===
-Custo mínimo: 10 unidades
-Estratégia ótima: consumir 5 unidades/dia de Reagente A, 2 unidades/dia de Descartável C
+```text
+Insumo: Luvas descartaveis
+Estoque inicial: 10 | Consumo diário ideal: 3
+
+Recursiva: 0
+Recursiva memoizada: 0
+Iterativa (Bottom-Up): 0
+
+Todas as versões deram o mesmo resultado
 ```
 
-E as três abordagens (recursiva, top-down e bottom-up) retornam o mesmo resultado, garantindo consistência do modelo.
+- Indica **política ótima encontrada**.  
+- Todas as versões retornam o **mesmo custo mínimo**, garantindo consistência.
 
 ---
 
 ## 🧮 Comparação de Desempenho
 
 | Versão | Tipo de Execução | Tempo de Execução | Uso de Memória | Facilidade de Entendimento |
-|--------|------------------|-------------------|----------------|-----------------------------|
-| Recursiva | Top-Down (sem cache) | ❌ Alta | ⚙️ Baixo | ✅ Alta |
-| Memorização | Top-Down (com cache) | ⚡ Média | 💾 Média | ✅ Alta |
-| Iterativa | Bottom-Up | 🚀 Baixa | 💽 Alta | ⚙️ Média |
+|--------|------------------|-----------------|----------------|-----------------------------|
+| Recursiva | Top-Down (sem cache) | ❌ Alto | ⚙️ Baixo | ✅ Alta |
+| Memoização | Top-Down (com cache) | ⚡ Médio | 💾 Médio | ✅ Alta |
+| Iterativa | Bottom-Up | 🚀 Baixo | 💽 Alto | ⚙️ Média |
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Python 3.11+**
-- Estruturas nativas (`dict`, `list`)
-- Nenhuma biblioteca externa
-- Execução via terminal
+- **Python 3.11+**  
+- Estruturas nativas (`list`, `dict`)  
+- Biblioteca **functools** para `lru_cache`  
+- Execução via terminal  
 
 ---
 
 ## 📄 Boas Práticas Aplicadas
 
-- Código limpo, modular e comentado  
+- Código modular e comentado  
 - Nomes claros para funções e variáveis  
 - Separação entre **modelo matemático** e **execução**  
 - Garantia de **resultados equivalentes** entre versões  
-- Uso de **tipagem e retornos consistentes**
+- Uso de **valores constantes para custos**, mantendo consistência
 
 ---
 
 ## 🧪 Como Executar
 
-1. Certifique-se de ter o Python 3.x instalado:
-   ```bash
-   python --version
-   ```
+1. Certifique-se de ter Python 3.x instalado:
+```bash
+python --version
+```
 
 2. Execute o script:
-   ```bash
-   python smartstock_pd.py
-   ```
+```bash
+python smartstock.py
+```
 
-3. Observe o resultado no terminal:
-   - Consumo ótimo por insumo  
-   - Custo total mínimo  
-   - Comparação entre versões recursiva, memorizada e iterativa  
-
----
-
-## 📌 Observações Finais
-
-O projeto **SmartStock PD** demonstra o uso prático da **Programação Dinâmica** em um **problema real de gestão de estoque**, unindo **conceitos matemáticos e implementação em Python**.  
-
-O modelo pode ser expandido para:
-- Incluir múltiplos períodos (dias, semanas)
-- Inserir custos de pedido e transporte
-- Utilizar heurísticas de previsão de demanda
-- Integrar com o sistema SmartStock original
+3. Observe os resultados no terminal:
+- Custo mínimo total  
+- Comparação entre recursiva, memoizada e iterativa  
 
 ---
 
@@ -182,3 +193,4 @@ O modelo pode ser expandido para:
 - **Fernando Gonzales Alexandre** | RM: 555045  
 - **Lucas Catroppa Piratininga Dias** | RM: 555450  
 - **Gabriel Guerreiro Escobosa Vallejo** | RM: 554973  
+
